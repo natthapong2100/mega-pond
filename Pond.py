@@ -175,7 +175,7 @@ class Pond:
     def run(self):
         # General setup
         direction = 1
-        speed_x = 
+        speed_x = 3
         # speed_y = 4
         random.seed(123)
         
