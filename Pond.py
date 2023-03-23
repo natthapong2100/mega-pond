@@ -21,8 +21,17 @@ import threading
 from Client import Client
 class Pond:
 
-    def __init__(self):
-        self.name = "sick-salmon"
+    def __init__(self, name):
+        
+        # if genesis == None:
+        #     genesis = "mega pond"
+        # else:
+        #     pass
+        
+        self.name = name
+        
+        
+        
         self.fishes = []
         self.moving_sprites = pygame.sprite.Group()
         self.bombImage = pygame.image.load("./assets/images/sprites/bomb.png")
@@ -166,7 +175,7 @@ class Pond:
     def run(self):
         # General setup
         direction = 1
-        speed_x = 3
+        speed_x = 
         # speed_y = 4
         random.seed(123)
         
@@ -189,7 +198,7 @@ class Pond:
         start_time = pygame.time.get_ticks()
         pregnant_time = pygame.time.get_ticks()
         update_time = pygame.time.get_ticks()
-        self.addFish(Fish(10,100))
+        self.addFish(Fish(10,100, self.name))
 
         # self.addFish(Fish(10,140, genesis="peem"))
         # self.addFish(Fish(100,200, genesis="dang"))
@@ -200,8 +209,8 @@ class Pond:
         running = True
         while running:
 
-            if len(self.fishes) > 15:
-                while(len(self.fishes)>16):
+            if len(self.fishes) > 1000: # 15
+                while(len(self.fishes)>1000): # ori = 16
                     kill = randint(0, len(self.fishes) - 1)
                     self.removeFish(self.fishes[kill])
                 # self.fishes[kill].die()
@@ -260,7 +269,7 @@ class Pond:
                 # print(self.fishes)
                 update_time = pygame.time.get_ticks()
 
-            if (time_since_new_birth > 5000):
+            if (time_since_new_birth > 100):
                 self.pheromoneCloud()
                 pregnant_time = pygame.time.get_ticks()
 

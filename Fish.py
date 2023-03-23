@@ -5,8 +5,14 @@ import random
 from FishData import FishData
 
 class Fish(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, genesis="sick-salmon", parent = None):
+    def __init__(self, pos_x, pos_y, genesis, parent = None):
         super().__init__()
+        
+        # if genesis == None:
+        #     genesis = "mega pond"
+        # else:
+        #     pass
+        
         self.fishData = FishData(genesis, parent)
          
         #swimming controller
@@ -16,7 +22,9 @@ class Fish(pygame.sprite.Sprite):
         self.sprites = [] #Main sprite
         self.leftSprite = []
         self.rightSprite = []
+        # print("************** 1 Genesis: " + genesis)
         self.loadSprite(genesis)
+        # print("************** 2 Genesis: " + genesis)
 
         self.image = self.sprites[self.current_sprite]
         self.rect = self.image.get_rect()
@@ -58,10 +66,16 @@ class Fish(pygame.sprite.Sprite):
 
     def loadSprite(self, genesis):
         path = "./assets/images/sprites/"
-        if genesis == "sick-salmon":
+        
+        if genesis == "mega pond":
             path += "local-pond/"
         else:
             path += "foreign-pond/"
+        
+        # if self.fishData.genesis == "mega pond":
+        #     path += "local-pond/"
+        # else:
+        #     path += "foreign-pond/"
 
         self.loadSpriteRight(path, self.sprites)
         self.loadSpriteLeft(path)

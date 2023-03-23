@@ -146,8 +146,8 @@ if __name__ == "__main__":
     msg_handler.start() 
     send_handler = threading.Thread(target=c.send_pond)
     send_handler.start()
-    c.migrate_fish(p.fishes[0],"sick-salmon")
+    c.migrate_fish(p.fishes[0],"mega pond")
     time.sleep(5)
-    c.migrate_fish(p.fishes[1],"sick-salmon")
+    c.migrate_fish(p.fishes[1],"mega pond")
     time.sleep(5)
 
