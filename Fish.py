@@ -129,13 +129,13 @@ class Fish(pygame.sprite.Sprite):
         
         if self.fishData.lifetime <= 5:
             self.fishData.size = "small"
-        elif self.fishData.lifetime > 5:
+        elif self.fishData.lifetime >= 5 and self.fishData.lifetime <=14:
             self.fishData.size = "medium"
-        elif self.fishData.lifetime > 10:
+        elif self.fishData.lifetime >= 15:
             self.fishData.size = "large"
         elif self.fishData.lifetime == 60:
             self.fishData.status = "dead"
-            
+
 
     def resetPheromone(self):
         self.fishData.pheromone = 0

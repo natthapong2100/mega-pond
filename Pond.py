@@ -25,13 +25,13 @@ class Pond:
         self.name = "sick-salmon"
         self.fishes = []
         self.moving_sprites = pygame.sprite.Group()
-        self.sharkImage = pygame.image.load("./assets/images/sprites/shark.png")
-        self.sharkImage = pygame.transform.scale(self.sharkImage, (128,128))
+        self.bombImage = pygame.image.load("./assets/images/sprites/bomb.png")
+        self.bombImage = pygame.transform.scale(self.bombImage, (128,128))
         self.msg = ""
         self.pondData = PondData(self.name)
         self.network = None
-        self.sharkTime = 0
-        self.displayShark = False
+        self.bombTime = 0
+        self.displaybomb = False
 
     def getPondData(self):
         return self.pondData
@@ -39,12 +39,12 @@ class Pond:
     def getPopulation(self):
         return len(self.fishes)
     
-    def randomShark(self):
+    def randombomb(self):
         dead = randint(0, len(self.fishes)-1)
         return self.fishes[dead]
 
-    # def sharkAttack(self, screen, fish):
-    #     screen.blit(self.sharkImage, (fish.getFishx(), fish.getFishy())) 
+    # def bombAttack(self, screen, fish):
+    #     screen.blit(self.bombImage, (fish.getFishx(), fish.getFishy())) 
     #     self.removeFish(fish)
     #     fish.die()
            
@@ -264,11 +264,11 @@ class Pond:
                 self.pheromoneCloud()
                 pregnant_time = pygame.time.get_ticks()
 
-            #shark every 15 seconds
+            #bomb every 15 seconds
             if time_since_enter > 15000:
                 if len(self.fishes)>4:
-                    deadFish = self.randomShark()
-                    screen.blit(self.sharkImage, (deadFish.getFishx()+30, deadFish.getFishy()))
+                    deadFish = self.randombomb()
+                    screen.blit(self.bombImage, (deadFish.getFishx()+30, deadFish.getFishy()))
                     pygame.display.flip()
                     pygame.event.pump()
                     pygame.time.delay(500)
