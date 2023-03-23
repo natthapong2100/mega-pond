@@ -35,6 +35,7 @@ class FishFrame(QGroupBox):
         self.addLabel(QLabel("Status: " + str(info[2])))
         self.addLabel(QLabel("Genesis: " + str(info[3])))
         self.addLabel(QLabel("Lifetime: " + str(info[4])))
+        self.addLabel(QLabel("Size: " + str(info[5])))
 
 
     def addLabel(self, widget):

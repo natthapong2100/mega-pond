@@ -29,7 +29,7 @@ class Dashboard(QMainWindow):
         j=0
         temp=0
         i=0
-        label = QLabel("Vivi Population : "+ str(len(self.fished)) + "/" + str(self.allPondsNum) + " (" + str(int((len(self.fished)/self.allPondsNum) * 100)) + "%)",self)
+        label = QLabel("Pond Population : "+ str(len(self.fished)) + "/" + str(self.allPondsNum) + " (" + str(int((len(self.fished)/self.allPondsNum) * 100)) + "%)",self)
         font = label.font();
         font.setPointSize(30);
         font.setBold(True);
@@ -38,8 +38,13 @@ class Dashboard(QMainWindow):
             # print("out", i, temp, j)
             while j < 2 and i < num:       
                 # print("here", i, temp, j)
-                info = [self.fished[i].getFishData().getId(), self.fished[i].getFishData().getState(), 
-                self.fished[i].getFishData().getStatus(), self.fished[i].getFishData().getGenesis(), str(self.fished[i].getFishData().lifetime)]
+                info = [self.fished[i].getFishData().getId(), 
+                        self.fished[i].getFishData().getState(), 
+                        self.fished[i].getFishData().getStatus(), 
+                        self.fished[i].getFishData().getGenesis(),
+                        str(self.fished[i].getFishData().lifetime),
+                        self.fished[i].getFishData().getSize()]
+                
                 self.grid.addWidget(FishFrame(info, self.widget), temp, j)
                 i+=1     
                 j+=1

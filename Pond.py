@@ -101,7 +101,7 @@ class Pond:
 
     def update(self, injectPheromone = False):
         for ind, f in enumerate( self.fishes): #checkout all the fish in the pond
-            f.updateLifeTime() # decrease life time by 1 sec
+            f.updateLifeTime() # decrease life time by 1 sec (change to increase instead)
             if f.fishData.status == "dead":
                 self.removeFish(f)
                 continue
