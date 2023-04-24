@@ -209,8 +209,8 @@ class Pond:
         running = True
         while running:
 
-            if len(self.fishes) > 1000: # 15
-                while(len(self.fishes)>1000): # ori = 16
+            if len(self.fishes) > 15: # ori = 15
+                while(len(self.fishes)> 16): # ori = 16
                     kill = randint(0, len(self.fishes) - 1)
                     self.removeFish(self.fishes[kill])
                 # self.fishes[kill].die()
@@ -269,12 +269,12 @@ class Pond:
                 # print(self.fishes)
                 update_time = pygame.time.get_ticks()
 
-            if (time_since_new_birth > 100):
+            if (time_since_new_birth > 5000): # ori = 5000
                 self.pheromoneCloud()
                 pregnant_time = pygame.time.get_ticks()
 
             #bomb every 15 seconds
-            if time_since_enter > 15000:
+            if time_since_enter > 5000:
                 if len(self.fishes)>4:
                     deadFish = self.randombomb()
                     screen.blit(self.bombImage, (deadFish.getFishx()+30, deadFish.getFishy()))
