@@ -22,11 +22,12 @@ from Pond import Pond
 os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (1000, 290)
 
 if __name__ == "__main__":
-    pond_name = sys.argv[1] if len(sys.argv) > 1 else "mega pond"
+    pond_name = sys.argv[1] if len(sys.argv) > 1 else "mega-pond"
     # for testing, comment below if want to use same db
     # db = 0 if pond_name == "matrix-fish" else 1
     # r = connect_to_redis()
     # fishStore = FishStore(r)
+    
     print("O: " + pond_name)
     
     pond = Pond(name=pond_name)

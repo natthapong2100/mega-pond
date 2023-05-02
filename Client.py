@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     connected = True
     while connected:
-        f = FishData("Sick Salmon","123456")
+        f = FishData("Mega Pond","123456")
         print("Client send :",f)
         msg = pickle.dumps(f)
         # message = bytes(f'{len(msg):<{HEADER}}',FORMAT) + msg

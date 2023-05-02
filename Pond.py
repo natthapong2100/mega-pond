@@ -24,7 +24,7 @@ class Pond:
     def __init__(self, name):
         
         # if genesis == None:
-        #     genesis = "mega pond"
+        #     genesis = "mega-pond"
         # else:
         #     pass
         

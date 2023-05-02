@@ -9,7 +9,7 @@ class Fish(pygame.sprite.Sprite):
         super().__init__()
         
         # if genesis == None:
-        #     genesis = "mega pond"
+        #     genesis = "mega-pond"
         # else:
         #     pass
         
@@ -67,12 +67,12 @@ class Fish(pygame.sprite.Sprite):
     def loadSprite(self, genesis):
         path = "./assets/images/sprites/"
         
-        if genesis == "mega pond":
+        if genesis == "mega-pond":
             path += "local-pond/"
         else:
             path += "foreign-pond/"
         
-        # if self.fishData.genesis == "mega pond":
+        # if self.fishData.genesis == "mega-pond":
         #     path += "local-pond/"
         # else:
         #     path += "foreign-pond/"
