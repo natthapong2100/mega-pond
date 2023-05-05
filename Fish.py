@@ -1,11 +1,15 @@
 import pygame
-import sys
+import time
 import random
+import consts
 
 from FishData import FishData
+from vivisystem.models import VivisystemFish
+from collections import defaultdict
+from typing import Callable, DefaultDict, Dict, List
 
 class Fish(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, genesis, parent = None):
+    def __init__(self, pos_x=None, pos_y=None, genesis="mega-pond", parent = None, data: FishData = None):
         super().__init__()
         
         # if genesis == None:
@@ -13,7 +17,7 @@ class Fish(pygame.sprite.Sprite):
         # else:
         #     pass
         
-        self.fishData = FishData(genesis, parent)
+        self.fishData = data or FishData(genesis, parent)
          
         #swimming controller
         self.direction = "RIGHT"
@@ -22,22 +26,31 @@ class Fish(pygame.sprite.Sprite):
         self.sprites = [] #Main sprite
         self.leftSprite = []
         self.rightSprite = []
-        # print("************** 1 Genesis: " + genesis)
-        self.loadSprite(genesis)
-        # print("************** 2 Genesis: " + genesis)
+        self.loadSprite()
 
         self.image = self.sprites[self.current_sprite]
         self.rect = self.image.get_rect()
-        self.rect.topleft = [pos_x, pos_y]
-        self.rect.left = pos_x
-        self.rect.top = pos_y
-        self.rect.right = pos_x + 100
+        self.rect.left = self.fishData.x # pos_x
+        self.rect.top = self.fishData.y
+        self.rect.right = self.fishData.x + 100
         self.attack_animation = True
         self.current_sprite = 0
         self.rect = self.image.get_rect()
-        self.rect.topleft = [pos_x, pos_y]
+        # self.rect.topleft = [pos_x, pos_y]
+        self.rect.topleft = [self.fishData.x, self.fishData.y]
         self.in_pond_sec = 0
         self.gaveBirth = False
+        self.speed = 0.05 # speed (initial)
+        # self.speed = float(random.randrange(5, 20)) / 100 # speed (random)
+        
+    def fromVivisystemFish(cls, fish: VivisystemFish):
+        fish_data = FishData(fish.genesis, fish.lifetime, fish.parent_id,
+                             fish.crowd_threshold, fish.pheromone_threshold)
+        return cls(data=fish_data)
+
+    def toVivisystemFish(self) -> VivisystemFish:
+        return VivisystemFish(fish_id=self.getId(), parent_id=self.fishData.getId(), genesis=self.fishData.getGenesis(), crowd_threshold=self.getCrowdThresh(),
+                              pheromone_threshold=self.fishData.pheromoneThresh, lifetime=self.getLifetime())
 
     def getFishData(self):
         return self.fishData
@@ -64,10 +77,10 @@ class Fish(pygame.sprite.Sprite):
             
         self.current_sprite = 0
 
-    def loadSprite(self, genesis):
+    def loadSprite(self):
         path = "./assets/images/sprites/"
         
-        if genesis == "mega-pond":
+        if self.fishData.genesis == "mega-pond":
             path += "local-pond/"
         else:
             path += "foreign-pond/"
@@ -99,31 +112,35 @@ class Fish(pygame.sprite.Sprite):
             self.leftSprite.append(img)
         self.current_sprite = 0
     
-    def update(self, speed):
+    def updateAnimation(self):
         if self.attack_animation == True:
-            self.current_sprite += speed
+            self.current_sprite += self.speed
             if int(self.current_sprite) >= len(self.sprites):
                 self.current_sprite = 0
         self.image = self.sprites[int(self.current_sprite)]
+    
+    def update(self):
+        self.move(3)
   
 
     def move(self, speed_x):
         if self.rect.left <= 0:
-            print("chon left")
+            # print("chon left")
             self.face = 1
-            print("x axis" + str(self.rect.left) + str(self.face))
+            # print("x axis" + str(self.rect.left) + str(self.face))
             self.flipSprite()
         
         elif self.rect.left >= 1180:
-            print("chon right")
+            # print("chon right")
             self.face = -1
-            print("x axis" + str(self.rect.left)  + str(self.face))
+            # print("x axis" + str(self.rect.left)  + str(self.face))
             self.flipSprite()
 
         speed_x = random.randint(1, 5) * self.face
 
         self.rect.x += speed_x
-        self.update(0.05)
+        self.updateAnimation()
+        # self.update_ani()
 
     def increasePheromone(self, n):
         self.fishData.pheromone += n
@@ -133,21 +150,27 @@ class Fish(pygame.sprite.Sprite):
     
     def getId(self):
         return self.fishData.id
+    
+    def getLifetime(self):
+        return self.fishData.lifetime
 
-    def isPregnant(self):
-        return self.fishData.pheromone >= self.fishData.pheromoneThresh
+    def isPregnant(self, current_pheromone):
+        if current_pheromone < self.fishData.pheromoneThresh:
+            return False
+        self.fishData.pheromoneThresh += self.fishData.pheromoneThresh
+        return True
 
     def updateLifeTime(self):
         self.in_pond_sec += 1
-        self.fishData.lifetime += 1
+        self.fishData.lifetime -= 1
         
-        if self.fishData.lifetime <= 5:
+        if self.fishData.lifetime <= 60:
             self.fishData.size = "small"
-        elif self.fishData.lifetime >= 5 and self.fishData.lifetime <=14:
+        elif self.fishData.lifetime >= 30 and self.fishData.lifetime <=50:
             self.fishData.size = "medium"
-        elif self.fishData.lifetime >= 15:
+        elif self.fishData.lifetime >= 20:
             self.fishData.size = "large"
-        elif self.fishData.lifetime == 60:
+        elif self.fishData.lifetime == 0:
             self.fishData.status = "dead"
 
 
@@ -162,3 +185,81 @@ class Fish(pygame.sprite.Sprite):
 
     def giveBirth(self):
         self.gaveBirth = True
+        
+
+class FishContainer(pygame.sprite.Group):
+    def __init__(self):
+        super().__init__()
+        # self.fishes['matrix-fish']['113230'] = {Fish1, Fish2, ...}
+        self.fishes: DefaultDict[str, Dict[str, Fish]] = defaultdict(dict)
+        self.percentage: Dict[str, float] = {}
+        self.limit = consts.FISHES_DISPLAY_LIMIT
+        self.last_updated_time = time.time()
+
+        # self.population_history['matrix-fish'] = [(timestamp, count), ...]
+        self.population_history: DefaultDict[str,
+                                             List[List[tuple]]] = defaultdict(list)
+
+    def add_fish(self, fish: Fish):
+        self.fishes[fish.getGenesis()][fish.getId()] = fish
+        self.update_percentages()
+        if self.get_total() < self.limit:
+            self.add(fish)
+
+    def remove_fish(self, genesis, fish_id):
+        if genesis in self.fishes:
+            self.fishes[genesis].pop(fish_id, None)
+            self.update_percentages()
+
+    def update_fishes(self, update: Callable[[Fish], None]):
+        for genesis in list(self.fishes.keys()):
+            for fish in list(self.fishes[genesis].values()):
+                update(fish)
+
+    def get_total(self) -> int:
+        return sum([len(self.fishes[key]) for key in self.fishes.keys()])
+
+    def get_percentages(self) -> Dict[str, float]:
+        return self.percentage
+
+    def update_percentages(self):
+        for genesis in self.fishes.keys():
+            total = self.get_total()
+            self.percentage[genesis] = len(
+                self.fishes[genesis]) / total if total > 0 else 0
+
+    def update_population_history(self, current_time):
+        if current_time - self.last_updated_time <= 2:
+            return
+        for genesis in self.fishes.keys():
+            self.population_history[genesis].append(
+                (current_time, len(self.fishes[genesis])))
+        self.last_updated_time = current_time
+
+    def get_population_history(self):
+        return self.population_history
+
+    def update_display(self):
+        current_time = time.time()
+        self.update_population_history(current_time)
+
+        self.last_update_time = current_time
+
+        total_fishes = self.get_total()
+        if total_fishes > self.limit:
+            self.empty()
+            for fish_type in self.fishes.keys():
+                fish_type_limit = int(self.percentage[fish_type] * self.limit)
+                for i, (fish_id, fish_sprite) in enumerate(self.fishes[fish_type].items()):
+                    if i < fish_type_limit:
+                        self.add(fish_sprite)
+                    else:
+                        break
+
+        self.update()
+
+    def getFishes(self):
+        fishes = []
+        for fish in self.fishes['matrix-fish'].values():
+            fishes.append(fish)
+        return fishes

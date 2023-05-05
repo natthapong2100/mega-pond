@@ -1,5 +1,5 @@
 import socketio
-from models import EventType, VivisystemPond, VivisystemFish
+from vivisystem.models import EventType, VivisystemPond, VivisystemFish
 import time
 
 
