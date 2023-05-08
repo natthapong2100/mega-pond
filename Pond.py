@@ -30,11 +30,6 @@ class Pond:
 
     def __init__(self, fishStore: FishStore, vivi_client: VivisystemClient ,name):
         
-        # if genesis == None:
-        #     genesis = "mega-pond"
-        # else:
-        #     pass
-        
         self.name = name
         
         
@@ -72,7 +67,7 @@ class Pond:
     def getPopulation(self):
         return self.fish_container.get_total()
     
-    def randombomb(self):
+    def randomBomb(self):
         dead = randint(0, len(self.fishes)-1)
         return self.fishes[dead]
 
@@ -80,6 +75,7 @@ class Pond:
     #     screen.blit(self.bombImage, (fish.getFishx(), fish.getFishy())) 
     #     self.removeFish(fish)
     #     fish.die()
+    
            
 
     def spawnFish(self, parentFish: Fish = None):
@@ -98,6 +94,7 @@ class Pond:
     def addFish(self, fish: Fish): #from another pond
         self.fishStore.add_fish(fish.fishData)
         self.fish_container.add_fish(fish)
+        self.fishes.append(fish)
 
     
     def removeFish(self, fish):
@@ -182,20 +179,20 @@ class Pond:
         bg = pygame.transform.scale(bg, (1280, 720))
         pygame.display.set_caption(f"Fish Haven Project: {self.name}")
         clock = pygame.time.Clock()
-        # start_time = pygame.time.get_ticks()
+        start_time = pygame.time.get_ticks()
         # pregnant_time = pygame.time.get_ticks()
 
         self.spawnFish()
 
         app = QApplication(sys.argv)
-        other_pond_list = []
+        
 
         running = True
         pygame.time.set_timer(self.UPDATE_EVENT, 1000)
         pygame.time.set_timer(self.SPAWN_FISH_EVENT, 3000)
         pygame.time.set_timer(self.SEND_STATUS_EVENT, 2000)
         pygame.time.set_timer(self.PHEROMONE_EVENT, 15000)
-        pygame.time.set_timer(self.SHARK_EVENT, 15000)
+        pygame.time.set_timer(self.SHARK_EVENT, 2000)
 
         while running:
             for event in pygame.event.get():
@@ -219,11 +216,23 @@ class Pond:
                     self.pheromoneCloud()
                 elif event.type == self.SHARK_EVENT:
                     pass
+                        
                 elif event.type == self.SEND_STATUS_EVENT:
                     self.vivi_client.send_status(VivisystemPond(
                         name=self.name, pheromone=self.pheromone, total_fishes=self.getPopulation()))
                 elif event.type == self.SPAWN_FISH_EVENT:
                     self.spawnFish()
+                    
+            if(pygame.time.get_ticks() - start_time) > 7000:
+                if len(self.fishes) > 4 and len(self.fishes)% 2 == 0:
+                    fishDeadByBomb = self.randomBomb()
+                    screen.blit(self.bombImage, (fishDeadByBomb.getFishx()+30, fishDeadByBomb.getFishy()))
+                    pygame.display.flip()
+                    pygame.event.pump()
+                    pygame.time.delay(1000)
+                    self.removeFish(fishDeadByBomb)
+                    fishDeadByBomb.die()
+                    start_time = pygame.time.get_ticks()
 
             if dashboard:
                 dashboard.update_dashboard(self.pheromone)
@@ -234,6 +243,7 @@ class Pond:
 
             screen.fill((0, 0, 0))
             screen.blit(bg, [0, 0])
+            
             self.fish_container.draw(screen)
 
             pygame.display.flip()

@@ -62,9 +62,9 @@ class Dashboard(QMainWindow):
         )
         label_str += f"Pond Pheremone: {pheromone}\n"
 
-        label_str += f"\nConstants:\n \tPopulation Limit: {consts.FISHES_POND_LIMIT}\n"
-        label_str += f"\tDisplay Limit: {consts.FISHES_DISPLAY_LIMIT}\n"
-        label_str += f"\tBirth Rate: {consts.BIRTH_RATE}x\n"
+        label_str += f"\nConstants:\nPopulation Limit: {consts.FISHES_POND_LIMIT}\n"
+        label_str += f"Display Limit: {consts.FISHES_DISPLAY_LIMIT}\n"
+        label_str += f"Birth Rate: {consts.BIRTH_RATE}x\n"
 
         fish_list = self.fishes.getFishes()
 
@@ -80,12 +80,6 @@ class Dashboard(QMainWindow):
             node = self.PieData(genesis, s, QtGui.QColor(
                 randcol1), QtGui.QColor(randcol2))
             self.slicedata.append(node)
-        # self.chart = MySimpleChart(self.slicedata)
-        # self.chart_view = QtChart.QChartView(self.chart)
-        # self.chart_view.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        # self.chart_view.setMinimumSize(300, 300)
-        # self.chart_view.setRenderHint(QtGui.QPainter.Antialiasing)
-
     def update_history_graph(self):
         population_history = self.fishes.get_population_history()
 
@@ -150,10 +144,6 @@ class Dashboard(QMainWindow):
         self.h_layout1 = QHBoxLayout()
         self.grid = QGridLayout()
 
-        # temp = ["Fish ID: 123", "State: In Pond", "Status: alive", "Genesis: matrix-pond", "Crowd Threshold: 5/10", "Pheromone Level: 4/5", "Lifetime: 30/60"]
-
-        # print(self.fished[0].getFishData().getGenesis())
-
         num = len(self.fishes)
 
         font = self.label.font()
@@ -177,15 +167,9 @@ class Dashboard(QMainWindow):
         self.graphWidget.setLabel("bottom", "Time", **styles)
         # Add legend
         self.graphWidget.addLegend()
-        # Add grid
-        self.graphWidget.showGrid(x=True, y=True)
-        # Set Range
-
-        # self.h_layout1.addWidget(self.graphWidget)
-        # self.h_layout1.addWidget(self.chart_view)
 
         #Add components to QVBoxLayout
-        # self.vbox.addWidget(self.label) # text
+        self.vbox.addWidget(self.label) # text
         # self.vbox.addLayout(self.h_layout1) # graph , history
         self.vbox.addLayout(self.grid)
 
@@ -200,8 +184,6 @@ class Dashboard(QMainWindow):
         self.scroll.setWidgetResizable(True)
 
         self.scroll.setWidget(self.widget)
-
-        # self.scroll.setWidget(self.graphWidget)
 
         self.setCentralWidget(self.scroll)
 
