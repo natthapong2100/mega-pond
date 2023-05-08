@@ -8,19 +8,50 @@ from vivisystem.models import VivisystemFish
 from collections import defaultdict
 from typing import Callable, DefaultDict, Dict, List
 
+# initiate FISH_ASSETS_PATH, pond_assets, fish_sprites_container
+FISH_ASSETS_PATH = "./assets/images/sprites"
+pond_assets = {"local-pond", "foreign-pond", "matrix-pond", "doo-pond", "khor-pond", "aquagang"} # foreign(=1) + 5 = 6
+fish_sprites_container = {p: ([], []) for p in pond_assets}
+
+def load_sprites_right(pond_name):
+    path = f"{FISH_ASSETS_PATH}/{pond_name}/"
+    for i in range(1, 5):
+        fish_path = path + str(i) + ".png"
+        img = pygame.image.load(str(fish_path))
+        img = pygame.transform.scale(img, (100, 100))
+        img = pygame.transform.flip(img, True, False)
+        fish_sprites_container[pond_name][0].append(img)
+
+
+def load_sprites_left(pond_name):
+    path = f"{FISH_ASSETS_PATH}/{pond_name}/"
+    for i in range(1, 5):
+        fish_path = path + str(i) + ".png"
+        img = pygame.image.load(fish_path)
+        img = pygame.transform.scale(img, (100, 100))
+        fish_sprites_container[pond_name][1].append(img)
+
+
+def load_sprites():
+    for pond in pond_assets:
+        load_sprites_left(pond)
+        load_sprites_right(pond)
+
+
+load_sprites()
+
+SCREEN_WIDTH = 1180
+SCREEN_HEIGHT = 300
+
 class Fish(pygame.sprite.Sprite):
     def __init__(self, pos_x=None, pos_y=None, genesis="mega-pond", parent = None, data: FishData = None):
         super().__init__()
         
-        # if genesis == None:
-        #     genesis = "mega-pond"
-        # else:
-        #     pass
         
         self.fishData = data or FishData(genesis, parent)
          
         #swimming controller
-        self.direction = "RIGHT"
+        # self.direction = "RIGHT"
         self.face = 1
         self.attack_animation = False
         self.sprites = [] #Main sprite
@@ -43,6 +74,7 @@ class Fish(pygame.sprite.Sprite):
         self.speed = 0.05 # speed (initial)
         # self.speed = float(random.randrange(5, 20)) / 100 # speed (random)
         
+    @classmethod
     def fromVivisystemFish(cls, fish: VivisystemFish):
         fish_data = FishData(fish.genesis, fish.lifetime, fish.parent_id,
                              fish.crowd_threshold, fish.pheromone_threshold)
@@ -77,40 +109,56 @@ class Fish(pygame.sprite.Sprite):
             
         self.current_sprite = 0
 
+    # def loadSprite(self):
+    #     path = "./assets/images/sprites/"
+        
+    #     if self.fishData.genesis == "mega-pond":
+    #         path += "local-pond/"
+    #     else:
+    #         path += "foreign-pond/"
+        
+    #     # if self.fishData.genesis == "mega-pond":
+    #     #     path += "local-pond/"
+    #     # else:
+    #     #     path += "foreign-pond/"
+
+    #     self.loadSpriteRight(path, self.sprites)
+    #     self.loadSpriteLeft(path)
+    #     self.loadSpriteRight(path, self.rightSprite)
+    
     def loadSprite(self):
-        path = "./assets/images/sprites/"
-        
-        if self.fishData.genesis == "mega-pond":
-            path += "local-pond/"
-        else:
-            path += "foreign-pond/"
-        
-        # if self.fishData.genesis == "mega-pond":
-        #     path += "local-pond/"
-        # else:
-        #     path += "foreign-pond/"
+        path = "local-pond"
+        if (
+            self.fishData.genesis != "mega-pond" 
+            and self.fishData.genesis 
+            not in pond_assets
+        ):
+            path = "foreign-pond"
+        elif self.fishData.genesis in pond_assets:
+            path = self.fishData.genesis
 
-        self.loadSpriteRight(path, self.sprites)
-        self.loadSpriteLeft(path)
-        self.loadSpriteRight(path, self.rightSprite)
-
-    def loadSpriteRight(self, path, spriteContainer):
-        for i in range(1, 5):
-            fish_path = path + str(i) + ".png"
-            img = pygame.image.load(str(fish_path))
-            img = pygame.transform.scale(img, (100, 100))
-            img = pygame.transform.flip(img, True, False)
-            spriteContainer.append(img)
+        self.sprites = fish_sprites_container[path][0]
+        self.leftSprite = fish_sprites_container[path][1]
+        self.rightSprite = fish_sprites_container[path][0]
         self.current_sprite = 0
+
+    # def loadSpriteRight(self, path, spriteContainer):
+    #     for i in range(1, 5):
+    #         fish_path = path + str(i) + ".png"
+    #         img = pygame.image.load(str(fish_path))
+    #         img = pygame.transform.scale(img, (100, 100))
+    #         img = pygame.transform.flip(img, True, False)
+    #         spriteContainer.append(img)
+    #     self.current_sprite = 0
         
 
-    def loadSpriteLeft(self, path):
-        for i in range(1, 5):
-            fish_path = path + str(i) + ".png"
-            img = pygame.image.load(fish_path)
-            img = pygame.transform.scale(img, (100, 100))
-            self.leftSprite.append(img)
-        self.current_sprite = 0
+    # def loadSpriteLeft(self, path):
+    #     for i in range(1, 5):
+    #         fish_path = path + str(i) + ".png"
+    #         img = pygame.image.load(fish_path)
+    #         img = pygame.transform.scale(img, (100, 100))
+    #         self.leftSprite.append(img)
+    #     self.current_sprite = 0
     
     def updateAnimation(self):
         if self.attack_animation == True:
@@ -120,7 +168,7 @@ class Fish(pygame.sprite.Sprite):
         self.image = self.sprites[int(self.current_sprite)]
     
     def update(self):
-        self.move(3)
+        self.move(3) # speed at horizontal = 3
   
 
     def move(self, speed_x):
@@ -140,7 +188,6 @@ class Fish(pygame.sprite.Sprite):
 
         self.rect.x += speed_x
         self.updateAnimation()
-        # self.update_ani()
 
     def increasePheromone(self, n):
         self.fishData.pheromone += n
@@ -190,13 +237,13 @@ class Fish(pygame.sprite.Sprite):
 class FishContainer(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
-        # self.fishes['matrix-fish']['113230'] = {Fish1, Fish2, ...}
+        # self.fishes['mega-pond']['113230'] = {Fish1, Fish2, ...}
         self.fishes: DefaultDict[str, Dict[str, Fish]] = defaultdict(dict)
         self.percentage: Dict[str, float] = {}
         self.limit = consts.FISHES_DISPLAY_LIMIT
         self.last_updated_time = time.time()
 
-        # self.population_history['matrix-fish'] = [(timestamp, count), ...]
+        # self.population_history['mega-pond'] = [(timestamp, count), ...]
         self.population_history: DefaultDict[str,
                                              List[List[tuple]]] = defaultdict(list)
 
@@ -260,6 +307,6 @@ class FishContainer(pygame.sprite.Group):
 
     def getFishes(self):
         fishes = []
-        for fish in self.fishes['matrix-fish'].values():
+        for fish in self.fishes['mega-pond'].values():
             fishes.append(fish)
         return fishes

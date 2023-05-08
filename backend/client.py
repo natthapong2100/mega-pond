@@ -10,7 +10,7 @@ with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
     sock.connect((hostname,PORT))  
     while run:
         #send fish
-        fish = FishData.FishData("Sick Salmon","000000")
+        fish = FishData.FishData("Mega Pond","000000")
         msg =  pickle.dumps(fish)
         sock.send(msg)
 

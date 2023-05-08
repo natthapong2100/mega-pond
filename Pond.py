@@ -58,8 +58,9 @@ class Pond:
         # events
         self.UPDATE_EVENT = pygame.USEREVENT + 1
         self.PHEROMONE_EVENT = pygame.USEREVENT + 2
-        self.SHARK_EVENT = pygame.USEREVENT + 3
+        self.SPAWN_FISH_EVENT = pygame.USEREVENT + 3
         self.SEND_STATUS_EVENT = pygame.USEREVENT + 4
+        self.SHARK_EVENT = pygame.USEREVENT + 5
         
         for fish in self.fishStore.get_fishes().values():
             self.fish_container.add_fish(fish)
@@ -191,6 +192,7 @@ class Pond:
 
         running = True
         pygame.time.set_timer(self.UPDATE_EVENT, 1000)
+        pygame.time.set_timer(self.SPAWN_FISH_EVENT, 3000)
         pygame.time.set_timer(self.SEND_STATUS_EVENT, 2000)
         pygame.time.set_timer(self.PHEROMONE_EVENT, 15000)
         pygame.time.set_timer(self.SHARK_EVENT, 15000)
@@ -220,6 +222,8 @@ class Pond:
                 elif event.type == self.SEND_STATUS_EVENT:
                     self.vivi_client.send_status(VivisystemPond(
                         name=self.name, pheromone=self.pheromone, total_fishes=self.getPopulation()))
+                elif event.type == self.SPAWN_FISH_EVENT:
+                    self.spawnFish()
 
             if dashboard:
                 dashboard.update_dashboard(self.pheromone)
