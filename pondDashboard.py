@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QWidget, QSlider, QLineEdit, QLabel, QPushButton, QScrollArea,QApplication,
-                             QHBoxLayout, QGroupBox, QGridLayout, QVBoxLayout, QMainWindow, QFrame)
+                             QHBoxLayout, QGroupBox, QGridLayout, QVBoxLayout, QMainWindow, QFrame, QListWidget,)
 from PyQt5.QtCore import Qt, QSize
 from PyQt5 import QtWidgets, uic, QtGui
 import sys
@@ -9,37 +9,43 @@ from pondFrame import PondFrame
 
 class PondDashboard(QMainWindow):
 
-    def __init__(self, allPond=None):
+    def __init__(self,connected_pond):
         super().__init__()
-        self.ponds = allPond
+        self.connected_ponds = connected_pond
+        self.label = QLabel(self)
+        self.list_widget = QListWidget(self)
+        self.update_dashboard()
         self.initUI()
+
+    def update_dashboard(self):
+        # self.connected_ponds = connected_ponds
+        temp = self.connected_ponds.values()
+        self.list_widget.clear()
+        for items in temp:
+            
+            self.list_widget.addItem(str(items))
 
     def initUI(self):
 
-        self.scroll = QScrollArea()             # Scroll Area which contains the widgets, set as the centralWidget
-        self.widget = QWidget()         # Widget that contains the collection of Vertical Box
-        self.vbox = QVBoxLayout()               # The Vertical Box that contains the Horizontal Boxes of  labels and buttons
+        self.scroll = (QScrollArea())
+        self.widget = QWidget()
+        self.vbox = (QVBoxLayout())
         self.grid = QGridLayout()
 
-        # temp = ["Fish ID: 123", "State: In Pond", "Status: alive", "Genesis: Sick-Salmon", "Crowd Threshold: 5/10", "Pheromone Level: 4/5", "Lifetime: 30/60"]
-        # print(self.fishe[0].getFishData().getGenesis())
-        # num = len(self.fished)
-        num = len(self.ponds)
 
-        i, j, temp = 0, 0, 0
-        for r in range(0,num): 
-            # print("out", i, temp, j)
-            while j < 2 and i < num:       
-                # print("here", i, temp, j)
-                info = [self.ponds[i].getPondName(), self.ponds[i].getPopulation(), self.ponds[i].fishes]
-                self.grid.addWidget(PondFrame(info, self.widget), temp, j)
-                i+=1     
-                j+=1
-            j=0
-            temp+=1
-            
+        font = self.label.font()
+        font.setPointSize(20)
+        font.setBold(True)
+        self.label.setFont(font)
+        self.connectLabel = QLabel()
+        self.connectLabel.setText("Connected Ponds:")
+        self.connectLabel.setFont(font)
 
-        self.widget.setLayout(self.grid)
+
+        self.vbox.addWidget(self.connectLabel)
+        self.vbox.addWidget(self.list_widget)
+        self.vbox.addLayout(self.grid)
+        self.widget.setLayout(self.vbox)
        
 
 
@@ -56,3 +62,6 @@ class PondDashboard(QMainWindow):
         self.show()
 
         return
+    
+    def update(self):
+        pass
