@@ -1,17 +1,21 @@
-import pygame
-import time
-import random
-import consts
 
-from FishData import FishData
-from vivisystem.models import VivisystemFish
+import random
+import time
 from collections import defaultdict
 from typing import Callable, DefaultDict, Dict, List
 
-# initiate FISH_ASSETS_PATH, pond_assets, fish_sprites_container
+import pygame
+
+import consts
+from FishData import FishData
+from vivisystem.models import VivisystemFish
+
+# example: "./assets/images/sprites/<pond-name>/"
 FISH_ASSETS_PATH = "./assets/images/sprites"
-pond_assets = {"local-pond", "foreign-pond", "matrix-pond", "doo-pond", "khor-pond", "aquagang"} # foreign(=1) + 5 = 6
-fish_sprites_container = {p: ([], []) for p in pond_assets}
+
+pond_assets = {"local-pond", "foreign-pond", "matrix-pond", "doo-pond", "aquagang", "khor-pond"}
+pond_sprites_container = {p: ([], []) for p in pond_assets}
+
 
 def load_sprites_right(pond_name):
     path = f"{FISH_ASSETS_PATH}/{pond_name}/"
@@ -20,7 +24,7 @@ def load_sprites_right(pond_name):
         img = pygame.image.load(str(fish_path))
         img = pygame.transform.scale(img, (100, 100))
         img = pygame.transform.flip(img, True, False)
-        fish_sprites_container[pond_name][0].append(img)
+        pond_sprites_container[pond_name][0].append(img)
 
 
 def load_sprites_left(pond_name):
@@ -29,7 +33,7 @@ def load_sprites_left(pond_name):
         fish_path = path + str(i) + ".png"
         img = pygame.image.load(fish_path)
         img = pygame.transform.scale(img, (100, 100))
-        fish_sprites_container[pond_name][1].append(img)
+        pond_sprites_container[pond_name][1].append(img)
 
 
 def load_sprites():
@@ -43,53 +47,66 @@ load_sprites()
 SCREEN_WIDTH = 1180
 SCREEN_HEIGHT = 300
 
+
 class Fish(pygame.sprite.Sprite):
-    def __init__(self, pos_x=None, pos_y=None, genesis="mega-pond", parent = None, data: FishData = None):
+    def __init__(
+        self, pos_x=None, pos_y=None, genesis="matrix-pond", parent=None, data: FishData = None
+    ):
         super().__init__()
-        
-        
-        self.fishData = data or FishData(genesis, parent)
-         
-        #swimming controller
-        # self.direction = "RIGHT"
+        self.fishData = data or FishData(genesis, parentId=parent)
+
+        # swimming controller
+        self.direction = "RIGHT"
         self.face = 1
-        self.attack_animation = False
-        self.sprites = [] #Main sprite
+        self.sprites = []  # Main sprite
         self.leftSprite = []
         self.rightSprite = []
         self.loadSprite()
 
         self.image = self.sprites[self.current_sprite]
         self.rect = self.image.get_rect()
-        self.rect.left = self.fishData.x # pos_x
+        self.rect.topleft = [self.fishData.x, self.fishData.y]
+        self.rect.left = self.fishData.x
         self.rect.top = self.fishData.y
         self.rect.right = self.fishData.x + 100
         self.attack_animation = True
         self.current_sprite = 0
-        self.rect = self.image.get_rect()
-        # self.rect.topleft = [pos_x, pos_y]
-        self.rect.topleft = [self.fishData.x, self.fishData.y]
         self.in_pond_sec = 0
         self.gaveBirth = False
-        self.speed = 0.05 # speed (initial)
-        # self.speed = float(random.randrange(5, 20)) / 100 # speed (random)
-        
+        self.speed = float(random.randrange(5, 20)) / 100
+
+        self.timer = 0
+        self.speed_x = 2
+        self.speed_y = 1
+        self.change_dir_timer = random.randint(60, 180)
+
     @classmethod
     def fromVivisystemFish(cls, fish: VivisystemFish):
-        fish_data = FishData(fish.genesis, fish.lifetime, fish.parent_id,
-                             fish.crowd_threshold, fish.pheromone_threshold)
+        fish_data = FishData(
+            fish.genesis,
+            fish.lifetime,
+            fish.parent_id,
+            fish.crowd_threshold,
+            fish.pheromone_threshold,
+        )
         return cls(data=fish_data)
 
     def toVivisystemFish(self) -> VivisystemFish:
-        return VivisystemFish(fish_id=self.getId(), parent_id=self.fishData.getId(), genesis=self.fishData.getGenesis(), crowd_threshold=self.getCrowdThresh(),
-                              pheromone_threshold=self.fishData.pheromoneThresh, lifetime=self.getLifetime())
+        return VivisystemFish(
+            fish_id=self.getId(),
+            parent_id=self.fishData.getId(),
+            genesis=self.fishData.getGenesis(),
+            crowd_threshold=self.getCrowdThresh(),
+            pheromone_threshold=self.fishData.pheromoneThresh,
+            lifetime=self.getLifetime(),
+        )
 
     def getFishData(self):
         return self.fishData
 
     def getFishTLPos(self):
         return self.rect.topleft
-    
+
     def getFishx(self):
         return self.rect.left
 
@@ -99,105 +116,72 @@ class Fish(pygame.sprite.Sprite):
     def die(self):
         self.kill()
 
+    def set_is_agent(self, is_agent):
+        self.fishData.is_agent = is_agent
+        if is_agent:
+            self.loadSprite()
 
     def flipSprite(self):
 
         if self.face == 1:
-            self.sprites=self.rightSprite
+            self.sprites = self.rightSprite
         elif self.face == -1:
-            self.sprites=self.leftSprite
-            
+            self.sprites = self.leftSprite
+
         self.current_sprite = 0
 
-    # def loadSprite(self):
-    #     path = "./assets/images/sprites/"
-        
-    #     if self.fishData.genesis == "mega-pond":
-    #         path += "local-pond/"
-    #     else:
-    #         path += "foreign-pond/"
-        
-    #     # if self.fishData.genesis == "mega-pond":
-    #     #     path += "local-pond/"
-    #     # else:
-    #     #     path += "foreign-pond/"
-
-    #     self.loadSpriteRight(path, self.sprites)
-    #     self.loadSpriteLeft(path)
-    #     self.loadSpriteRight(path, self.rightSprite)
-    
     def loadSprite(self):
         path = "local-pond"
         if (
-            self.fishData.genesis != "mega-pond" 
-            and self.fishData.genesis 
-            not in pond_assets
+            self.fishData.genesis != "mega-pond"
+            and self.fishData.genesis not in pond_assets
         ):
             path = "foreign-pond"
         elif self.fishData.genesis in pond_assets:
             path = self.fishData.genesis
 
-        self.sprites = fish_sprites_container[path][0]
-        self.leftSprite = fish_sprites_container[path][1]
-        self.rightSprite = fish_sprites_container[path][0]
+        self.sprites = pond_sprites_container[path][0]
+        self.leftSprite = pond_sprites_container[path][1]
+        self.rightSprite = pond_sprites_container[path][0]
         self.current_sprite = 0
 
-    # def loadSpriteRight(self, path, spriteContainer):
-    #     for i in range(1, 5):
-    #         fish_path = path + str(i) + ".png"
-    #         img = pygame.image.load(str(fish_path))
-    #         img = pygame.transform.scale(img, (100, 100))
-    #         img = pygame.transform.flip(img, True, False)
-    #         spriteContainer.append(img)
-    #     self.current_sprite = 0
-        
-
-    # def loadSpriteLeft(self, path):
-    #     for i in range(1, 5):
-    #         fish_path = path + str(i) + ".png"
-    #         img = pygame.image.load(fish_path)
-    #         img = pygame.transform.scale(img, (100, 100))
-    #         self.leftSprite.append(img)
-    #     self.current_sprite = 0
-    
-    def updateAnimation(self):
-        if self.attack_animation == True:
-            self.current_sprite += self.speed
+    def update_ani(self):
+        if self.attack_animation:
+            self.current_sprite += self.speed  # not correct
             if int(self.current_sprite) >= len(self.sprites):
                 self.current_sprite = 0
         self.image = self.sprites[int(self.current_sprite)]
-    
+
+    def move(self):
+        self.timer += 1
+        if self.timer >= 60:  # Change direction every 60 frames (1 second)
+            self.timer = 0
+            self.face = random.choice([-1, 1])
+            self.speed_x = random.randint(1, 5) * self.face
+            self.flipSprite()
+
+        if self.rect.left <= 0 or self.rect.right >= SCREEN_WIDTH:
+            self.face = -self.face
+            self.speed_x = -self.speed_x
+            self.flipSprite()
+
+        self.rect.x += self.speed_x
+
+        self.update_ani()
+
     def update(self):
-        self.move(3) # speed at horizontal = 3
-  
-
-    def move(self, speed_x):
-        if self.rect.left <= 0:
-            # print("chon left")
-            self.face = 1
-            # print("x axis" + str(self.rect.left) + str(self.face))
-            self.flipSprite()
-        
-        elif self.rect.left >= 1180:
-            # print("chon right")
-            self.face = -1
-            # print("x axis" + str(self.rect.left)  + str(self.face))
-            self.flipSprite()
-
-        speed_x = random.randint(1, 5) * self.face
-
-        self.rect.x += speed_x
-        self.updateAnimation()
+        self.move()
 
     def increasePheromone(self, n):
         self.fishData.pheromone += n
+        # TODO: update redis?
 
     def migrate(self):
         pass
-    
+
     def getId(self):
         return self.fishData.id
-    
+
     def getLifetime(self):
         return self.fishData.lifetime
 
@@ -209,43 +193,37 @@ class Fish(pygame.sprite.Sprite):
 
     def updateLifeTime(self):
         self.in_pond_sec += 1
-        self.fishData.lifetime -= 1
-        
-        if self.fishData.lifetime <= 60:
-            self.fishData.size = "small"
-        elif self.fishData.lifetime >= 30 and self.fishData.lifetime <=50:
-            self.fishData.size = "medium"
-        elif self.fishData.lifetime >= 20:
-            self.fishData.size = "large"
-        elif self.fishData.lifetime == 0:
+        if self.fishData.has_time_passed(self.fishData.lifetime):
             self.fishData.status = "dead"
-
+            
 
     def resetPheromone(self):
         self.fishData.pheromone = 0
-    
+
     def getGenesis(self):
         return self.fishData.genesis
 
     def getCrowdThresh(self):
-            return self.fishData.crowdThreshold
+        return self.fishData.crowdThreshold
 
     def giveBirth(self):
         self.gaveBirth = True
-        
+
+    def shouldMigrate(self) -> bool:
+        pass
+
 
 class FishContainer(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
-        # self.fishes['mega-pond']['113230'] = {Fish1, Fish2, ...}
+        # self.fishes['matrix-pond']['113230'] = {Fish1, Fish2, ...}
         self.fishes: DefaultDict[str, Dict[str, Fish]] = defaultdict(dict)
         self.percentage: Dict[str, float] = {}
         self.limit = consts.FISHES_DISPLAY_LIMIT
         self.last_updated_time = time.time()
 
-        # self.population_history['mega-pond'] = [(timestamp, count), ...]
-        self.population_history: DefaultDict[str,
-                                             List[List[tuple]]] = defaultdict(list)
+        # self.population_history['matrix-pond'] = [(timestamp, count), ...]
+        self.population_history: DefaultDict[str, List[List[tuple]]] = defaultdict(list)
 
     def add_fish(self, fish: Fish):
         self.fishes[fish.getGenesis()][fish.getId()] = fish
@@ -272,15 +250,13 @@ class FishContainer(pygame.sprite.Group):
     def update_percentages(self):
         for genesis in self.fishes.keys():
             total = self.get_total()
-            self.percentage[genesis] = len(
-                self.fishes[genesis]) / total if total > 0 else 0
+            self.percentage[genesis] = len(self.fishes[genesis]) / total if total > 0 else 0
 
     def update_population_history(self, current_time):
         if current_time - self.last_updated_time <= 2:
             return
         for genesis in self.fishes.keys():
-            self.population_history[genesis].append(
-                (current_time, len(self.fishes[genesis])))
+            self.population_history[genesis].append((current_time, len(self.fishes[genesis])))
         self.last_updated_time = current_time
 
     def get_population_history(self):
@@ -297,6 +273,13 @@ class FishContainer(pygame.sprite.Group):
             self.empty()
             for fish_type in self.fishes.keys():
                 fish_type_limit = int(self.percentage[fish_type] * self.limit)
+                # if current_time - self.last_update_time < 5:
+                #     fish_type_fishes = random.sample(
+                #         list(self.fishes[fish_type].values()), fish_type_limit
+                #     )
+                #     for fish_sprite in fish_type_fishes:
+                #         self.add(fish_sprite)
+                # else:
                 for i, (fish_id, fish_sprite) in enumerate(self.fishes[fish_type].items()):
                     if i < fish_type_limit:
                         self.add(fish_sprite)
@@ -307,6 +290,6 @@ class FishContainer(pygame.sprite.Group):
 
     def getFishes(self):
         fishes = []
-        for fish in self.fishes['mega-pond'].values():
+        for fish in self.fishes["mega-pond"].values():
             fishes.append(fish)
         return fishes

@@ -1,69 +1,99 @@
-import random
-import math
+
 import datetime
+import math
+import random
+
 
 def randId():
     digits = [i for i in range(0, 10)]
-    random_str=""
+    random_str = ""
     for i in range(6):
         index = math.floor(random.random() * 10)
         random_str += str(digits[index])
     return random_str
 
-def randSize():
-    rand_num = random.random()
-    size = ""
-    if rand_num < 0.5:
-        return size == "small"
-    else:
-        return size == "big"
 
 def randCrowdThresh():
     return random.randint(5, 20)
 
+
 def randPheromoneThresh():
     return random.randint(30, 60)
 
+
 class FishData:
-    def __init__(self, genesis, lifetime=None, parentId=None, crowThreshold=None, pheromoneThreshold=None):
+    def __init__(
+        self, genesis, lifetime=None, parentId=None, crowdThreshold=None, pheromoneThreshold=None
+    ):
         self.id = randId()
-        self.size = "small" # just an initiate
         self.state = "in-pond"
         self.status = "alive"
-        self.genesis = genesis ## Pond name
-        self.crowdThreshold = crowThreshold or randCrowdThresh()
+        self.genesis = genesis  # Pond name
+        self.crowdThreshold = crowdThreshold or randCrowdThresh()
         self.pheromone = 0
         self.pheromoneThresh = pheromoneThreshold or randPheromoneThresh()
-        self.x, self.y = random.randint(50, 650), random.randint(50, 650)
-        self.parentId = parentId
-        
-        self.lifetime =  50
+        self.lifetime = lifetime or 60
         self.parentId = parentId or randId()
         self.x, self.y = random.randint(50, 650), random.randint(50, 650)
+        self.is_agent = False
         self.timestamp = datetime.datetime.now()
+        self.size = "small"
+        self.life_time_left = 60
+
+    def random_pos(self):
+        self.x, self.y = random.randint(50, 650), random.randint(50, 650)
+
+    def has_time_passed(self, seconds: int) -> bool:
+        current_time = datetime.datetime.now()
+        time_diff = current_time - self.timestamp
+        return time_diff.total_seconds() >= seconds
+
+    def getLifeTimeLeft(self):
+        current_time = datetime.datetime.now()
+        time_diff = current_time - self.timestamp
+        self.life_time_left = self.lifetime - time_diff.seconds
+        return self.life_time_left
+    
+    def getSize(self):
+        if self.life_time_left > 50:
+            self.size = "small"
+        elif self.life_time_left >= 30 and self.life_time_left <= 50:
+            self.size = "medium"
+        elif self.life_time_left < 30:
+            self.size = "large"
+        elif self.life_time_left == 0:
+            self.size = "dead"
+        return self.size
+
     def getId(self):
         return self.id
-    def getSize(self):
-        return self.size
+
     def getState(self):
         return self.state
+
     def getStatus(self):
+        if self.getLifeTimeLeft == 0:
+            self.status = "dead"
         return self.status
+
     def getGenesis(self):
         return self.genesis
+
     def getcrowdThreshold(self):
         return self.crowdThreshold
+
     def pheromone(self):
         return self.pheromone
+
     def pheromoneThresh(self):
         return self.pheromoneThresh
+
     def getLifetime(self):
         return self.lifetime
+
     def parentId(self):
         return self.parentId
-
+    
+    
     def __str__(self):
-        if self.parentId:
-            return self.id + "Size: " + str(self.size) + " Genesis: " + self.genesis + " Parent: " + self.parentId + " Lifetime: " + str(self.lifetime)
-        else:
-            return self.id + "Size: " + str(self.size) + " Genesis: " + self.genesis + " Lifetime: " + str(self.lifetime)
+        pass
